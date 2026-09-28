@@ -54,7 +54,9 @@ public class MainActivity extends Activity {
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setBuiltInZoomControls(false);
-        s.setLoadWithOverviewMode(true);
+        s.setUseWideViewPort(true);      // honour <meta viewport width=device-width>
+        s.setLoadWithOverviewMode(false); // don't shrink the page to fit
+        s.setTextZoom(100);               // ignore system font scaling breaking the layout
 
         webView.setWebViewClient(new WebViewClient() {
             @Override

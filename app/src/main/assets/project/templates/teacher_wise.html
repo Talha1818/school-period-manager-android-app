@@ -4,7 +4,7 @@
 
 {% block actions %}
 <a class="btn btn-danger" href="{% url 'teacher_wise_pdf' %}"><i class="bi bi-file-earmark-pdf"></i> Save PDF</a>
-<a class="btn btn-primary" href="{% url 'class_wise' %}"><i class="bi bi-pencil-square"></i> Edit in Class Wise</a>
+<a class="btn btn-primary" href="{% url 'class_wise' %}"><i class="bi bi-pencil-square"></i> <span class="d-none d-sm-inline">Edit in Class Wise</span><span class="d-sm-none">Edit</span></a>
 {% endblock %}
 
 {% block content %}

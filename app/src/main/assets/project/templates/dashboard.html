@@ -22,15 +22,15 @@
       </div>
       <div class="table-responsive">
         <table class="table align-middle mb-0">
-          <thead><tr><th></th><th>#</th><th>Name</th><th>Designation</th><th>Contact</th><th>Status</th><th class="text-end">Action</th></tr></thead>
+          <thead><tr><th></th><th class="d-none d-sm-table-cell">#</th><th>Name</th><th class="d-none d-md-table-cell">Designation</th><th class="d-none d-md-table-cell">Contact</th><th>Status</th><th class="text-end">Action</th></tr></thead>
           <tbody id="rows-teacher" data-kind="teacher">
           {% for t in teachers %}
             <tr draggable="true" class="drag-row" data-id="{{ t.pk }}">
               <td><i class="bi bi-grip-vertical drag-handle"></i></td>
-              <td>{{ forloop.counter }}</td>
-              <td class="fw-semibold">{{ t.name }}</td>
-              <td>{{ t.designation|default:"—" }}</td>
-              <td>{{ t.contact_no|default:"—" }}</td>
+              <td class="d-none d-sm-table-cell">{{ forloop.counter }}</td>
+              <td class="fw-semibold">{{ t.name }}<div class="small fw-normal text-muted d-md-none">{{ t.designation }}{% if t.designation and t.contact_no %} · {% endif %}{{ t.contact_no }}</div></td>
+              <td class="d-none d-md-table-cell">{{ t.designation|default:"—" }}</td>
+              <td class="d-none d-md-table-cell">{{ t.contact_no|default:"—" }}</td>
               <td>
                 <form method="post" action="{% url 'toggle_teacher' t.pk %}">{% csrf_token %}
                   <input type="hidden" name="next" value="{{ request.path }}">

@@ -106,11 +106,44 @@ tr.drag-row { cursor: default; }
 .del-icon { width: 56px; height: 56px; margin: 0 auto; border-radius: 50%; background: #fee2e2; color: #dc2626; display: grid; place-items: center; font-size: 1.5rem; }
 
 /* Responsive */
+html, body { overflow-x: hidden; }
+.main { min-width: 0; }
+.sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 1035; }
+.drag-handle { touch-action: none; }
+.card-box .table td:last-child { white-space: nowrap; }
+
 @media (max-width: 991px) {
-  .sidebar { transform: translateX(-100%); }
-  .sidebar.open { transform: translateX(0); }
+  .sidebar { transform: translateX(-100%); width: min(82vw, 290px); }
+  .sidebar.open { transform: translateX(0); box-shadow: 8px 0 30px rgba(0,0,0,.35); }
+  body.sidebar-open .sidebar-backdrop { display: block; }
   .main { margin-left: 0; }
   .content, .topbar { padding-left: 16px; padding-right: 16px; }
+  .grid-wrap { max-height: calc(100vh - 190px); max-height: calc(100dvh - 190px); }
+}
+
+@media (max-width: 575px) {
+  .topbar { flex-wrap: wrap; padding: 10px 12px; gap: 8px; }
+  .page-title { flex: 1 1 0; min-width: 0; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .topbar > .ms-auto { flex: 1 1 100%; margin-left: 0 !important; gap: 8px !important; justify-content: space-between; flex-wrap: wrap; }
+  .today-date { font-size: .8rem; }
+  .topbar .btn { padding: 6px 10px; font-size: .85rem; }
+  .content { padding: 14px 12px 28px; }
+  .stat { padding: 12px; gap: 10px; }
+  .stat i { width: 34px; height: 34px; font-size: 1.15rem; }
+  .stat-num { font-size: 1.2rem; }
+  .card-head { padding: 12px 14px; }
+  .card-box .table th, .card-box .table td { padding: 10px 10px; }
+  .card-box .table th:first-child, .card-box .table td:first-child { width: 34px; padding-left: 8px; }
+  .drag-handle { font-size: 1.2rem; padding: 6px 4px; }
+  .btn-icon-edit, .btn-icon-del { padding: 6px 9px; }
+  .hint { font-size: .74rem; }
+  .card-box .grid-table th, .card-box .grid-table td { padding: 8px 8px; }
+  .grid-table th.sticky-col, .grid-table td.sticky-col { min-width: 100px; max-width: 120px; font-size: .85rem; padding-left: 8px; }
+  .slot { min-width: 150px; }
+  .slot .form-select { font-size: .78rem; padding: 5px 22px 5px 8px; }
+  .slot-view { min-width: 84px; }
+  .toast-container { left: 0; right: 0; }
+  .modal-dialog { margin: .75rem; }
 }
 
 /* Print */
