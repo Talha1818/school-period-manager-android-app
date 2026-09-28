@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block heading %}Dashboard{% endblock %}
+
+{% block content %}
+<p class="hint"><i class="bi bi-grip-vertical"></i> Drag rows to reorder</p>
+<!-- Stat cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-3"><div class="stat stat-blue"><i class="bi bi-people-fill"></i><div><div class="stat-num">{{ teachers|length }}</div><div class="stat-lbl">Teachers</div></div></div></div>
+  <div class="col-6 col-xl-3"><div class="stat stat-green"><i class="bi bi-mortarboard-fill"></i><div><div class="stat-num">{{ classes|length }}</div><div class="stat-lbl">Classes</div></div></div></div>
+  <div class="col-6 col-xl-3"><div class="stat stat-amber"><i class="bi bi-clock-fill"></i><div><div class="stat-num">{{ periods|length }}</div><div class="stat-lbl">Periods</div></div></div></div>
+  <div class="col-6 col-xl-3"><div class="stat stat-rose"><i class="bi bi-journal-bookmark-fill"></i><div><div class="stat-num">{{ subjects|length }}</div><div class="stat-lbl">Subjects</div></div></div></div>
+</div>
+
+<div class="row g-4">
+  <!-- Teachers -->
+  <div class="col-12 col-xxl-7">
+    <div class="card-box">
+      <div class="card-head">
+        <h5><i class="bi bi-people me-2"></i>Teachers</h5>
+        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#teacherModal"><i class="bi bi-plus-lg"></i> Add</button>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th></th><th>#</th><th>Name</th><th>Designation</th><th>Contact</th><th>Status</th><th class="text-end">Action</th></tr></thead>
+          <tbody id="rows-teacher" data-kind="teacher">
+          {% for t in teachers %}
+            <tr draggable="true" class="drag-row" data-id="{{ t.pk }}">
+              <td><i class="bi bi-grip-vertical drag-handle"></i></td>
+              <td>{{ forloop.counter }}</td>
+              <td class="fw-semibold">{{ t.name }}</td>
+              <td>{{ t.designation|default:"—" }}</td>
+              <td>{{ t.contact_no|default:"—" }}</td>
+              <td>
+                <form method="post" action="{% url 'toggle_teacher' t.pk %}">{% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.path }}">
+                  <button class="badge-btn {% if t.is_active %}on{% else %}off{% endif %}" title="Click to toggle">
+                    {% if t.is_active %}Active{% else %}Inactive{% endif %}
+                  </button>
+                </form>
+              </td>
+              <td class="text-end"><div class="d-inline-flex gap-1"><button class="btn btn-sm btn-icon-edit" data-edit-url="{% url 'edit_item' 'teacher' t.pk %}" data-name="{{ t.name }}" data-designation="{{ t.designation }}" data-contact="{{ t.contact_no }}" data-active="{% if t.is_active %}1{% endif %}"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-icon-del" data-delete-url="{% url 'delete_item' 'teacher' t.pk %}" data-delete-name="{{ t.name }}"><i class="bi bi-trash3"></i></button></div></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="7" class="empty">No teachers yet. Click <b>Add</b> to create one.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Classes -->
+  <div class="col-12 col-md-6 col-xxl-5">
+    <div class="card-box">
+      <div class="card-head">
+        <h5><i class="bi bi-mortarboard me-2"></i>Classes</h5>
+        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#classModal"><i class="bi bi-plus-lg"></i> Add</button>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th></th><th>#</th><th>Class Name</th><th class="text-end">Action</th></tr></thead>
+          <tbody id="rows-class" data-kind="class">
+          {% for c in classes %}
+            <tr draggable="true" class="drag-row" data-id="{{ c.pk }}">
+              <td><i class="bi bi-grip-vertical drag-handle"></i></td>
+              <td>{{ forloop.counter }}</td>
+              <td class="fw-semibold">{{ c.name }}</td>
+              <td class="text-end"><div class="d-inline-flex gap-1"><button class="btn btn-sm btn-icon-edit" data-edit-url="{% url 'edit_item' 'class' c.pk %}" data-name="{{ c.name }}" data-kind="Class"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-icon-del" data-delete-url="{% url 'delete_item' 'class' c.pk %}" data-delete-name="{{ c.name }}"><i class="bi bi-trash3"></i></button></div></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4" class="empty">No classes yet.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Periods -->
+  <div class="col-12 col-md-6 col-xxl-3">
+    <div class="card-box">
+      <div class="card-head">
+        <h5><i class="bi bi-clock-history me-2"></i>Periods</h5>
+        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#periodModal"><i class="bi bi-plus-lg"></i> Add</button>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th></th><th>#</th><th>Period</th><th class="text-end">Action</th></tr></thead>
+          <tbody id="rows-period" data-kind="period">
+          {% for p in periods %}
+            <tr draggable="true" class="drag-row" data-id="{{ p.pk }}">
+              <td><i class="bi bi-grip-vertical drag-handle"></i></td>
+              <td>{{ forloop.counter }}</td>
+              <td><span class="chip">{{ p.name }}</span></td>
+              <td class="text-end"><div class="d-inline-flex gap-1"><button class="btn btn-sm btn-icon-edit" data-edit-url="{% url 'edit_item' 'period' p.pk %}" data-name="{{ p.name }}" data-kind="Period"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-icon-del" data-delete-url="{% url 'delete_item' 'period' p.pk %}" data-delete-name="{{ p.name }}"><i class="bi bi-trash3"></i></button></div></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4" class="empty">No periods yet.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Subjects -->
+  <div class="col-12 col-xxl-4">
+    <div class="card-box">
+      <div class="card-head">
+        <h5><i class="bi bi-journal-bookmark me-2"></i>Subjects</h5>
+        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#subjectModal"><i class="bi bi-plus-lg"></i> Add</button>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th></th><th>#</th><th>Subject</th><th class="text-end">Action</th></tr></thead>
+          <tbody id="rows-subject" data-kind="subject">
+          {% for s in subjects %}
+            <tr draggable="true" class="drag-row" data-id="{{ s.pk }}">
+              <td><i class="bi bi-grip-vertical drag-handle"></i></td>
+              <td>{{ forloop.counter }}</td>
+              <td class="fw-semibold">{{ s.name }}</td>
+              <td class="text-end"><div class="d-inline-flex gap-1"><button class="btn btn-sm btn-icon-edit" data-edit-url="{% url 'edit_item' 'subject' s.pk %}" data-name="{{ s.name }}" data-kind="Subject"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-icon-del" data-delete-url="{% url 'delete_item' 'subject' s.pk %}" data-delete-name="{{ s.name }}"><i class="bi bi-trash3"></i></button></div></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4" class="empty">No subjects yet.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll("tbody.drag-row, tbody[id^='rows-']").forEach(function (tbody) {
+  var kind = tbody.dataset.kind;
+  var dragEl = null;
+
+  tbody.addEventListener("dragstart", function (e) {
+    var tr = e.target.closest("tr.drag-row");
+    if (!tr) return;
+    dragEl = tr;
+    tr.classList.add("dragging");
+    e.dataTransfer.effectAllowed = "move";
+  });
+
+  tbody.addEventListener("dragend", function () {
+    if (dragEl) dragEl.classList.remove("dragging");
+    dragEl = null;
+    saveOrder(tbody, kind);
+  });
+
+  tbody.addEventListener("dragover", function (e) {
+    e.preventDefault();
+    if (!dragEl) return;
+    var after = getRowAfter(tbody, e.clientY);
+    if (after == null) tbody.appendChild(dragEl);
+    else tbody.insertBefore(dragEl, after);
+  });
+});
+
+function getRowAfter(container, y) {
+  var rows = [].slice.call(container.querySelectorAll("tr.drag-row:not(.dragging)"));
+  return rows.reduce(function (closest, row) {
+    var box = row.getBoundingClientRect();
+    var offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) return { offset: offset, element: row };
+    return closest;
+  }, { offset: -Infinity, element: null }).element;
+}
+
+function saveOrder(tbody, kind) {
+  var ids = [].slice.call(tbody.querySelectorAll("tr.drag-row")).map(function (tr) { return tr.dataset.id; });
+  fetch("/reorder/" + kind + "/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken() },
+    body: JSON.stringify({ order: ids })
+  })
+    .then(function (r) { return r.json(); })
+    .then(function (d) { showToast(d.ok ? "Order saved" : "Could not save order", d.ok ? "success" : "danger"); })
+    .catch(function () { showToast("Network error", "danger"); });
+}
+</script>
+{% endblock %}

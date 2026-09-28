@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}Class Wise{% endblock %}
+{% block heading %}Class Wise Distribution{% endblock %}
+
+{% block content %}
+{% if not rows or not periods %}
+  <div class="card-box p-5 text-center">
+    <i class="bi bi-info-circle display-5 text-muted"></i>
+    <h5 class="mt-3">Add classes and periods first</h5>
+    <p class="text-muted">Use the <b>Quick Add</b> buttons in the sidebar to add at least one class and one period.</p>
+  </div>
+{% else %}
+<p class="hint"><i class="bi bi-lightning-charge-fill"></i> Select a teacher and subject in any cell — it saves automatically. Drag the <i class="bi bi-grip-vertical"></i> handle to reorder classes. A teacher cannot be in two classes in the same period.</p>
+<div class="card-box">
+  <div class="table-responsive grid-wrap">
+    <table class="table grid-table align-middle mb-0">
+      <thead>
+        <tr>
+          <th class="sticky-col">Class Name</th>
+          {% for p in periods %}<th>{{ p.name }}</th>{% endfor %}
+        </tr>
+      </thead>
+      <tbody id="classRows">
+        {% for row in rows %}
+        <tr draggable="true" class="drag-row" data-class-id="{{ row.cls.id }}">
+          <td class="sticky-col class-name"><i class="bi bi-grip-vertical drag-handle" title="Drag to reorder"></i> {{ row.cls.name }}</td>
+          {% for cell in row.cells %}
+          <td class="slot" data-class="{{ row.cls.id }}" data-period="{{ cell.period.id }}">
+            <select class="form-select form-select-sm slot-teacher">
+              <option value="">Teacher</option>
+              {% for t in teachers %}
+                {% if t.is_active or t.id == cell.teacher_id %}
+                <option value="{{ t.id }}" {% if t.id == cell.teacher_id %}selected{% endif %}>{{ t.name }}</option>
+                {% endif %}
+              {% endfor %}
+            </select>
+            <select class="form-select form-select-sm slot-subject mt-1">
+              <option value="">Subject</option>
+              {% for s in subjects %}
+                <option value="{{ s.id }}" {% if s.id == cell.subject_id %}selected{% endif %}>{{ s.name }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll("td.slot").forEach(function (td) {
+  var tSel = td.querySelector(".slot-teacher");
+  var sSel = td.querySelector(".slot-subject");
+  var last = { teacher: tSel.value, subject: sSel.value };
+
+  function paint() { td.classList.toggle("filled", !!(tSel.value || sSel.value)); }
+  paint();
+
+  function save() {
+    fetch("{% url 'save_allocation' %}", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken() },
+      body: JSON.stringify({
+        class_id: td.dataset.class,
+        period_id: td.dataset.period,
+        teacher_id: tSel.value,
+        subject_id: sSel.value
+      })
+    })
+    .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+    .then(function (res) {
+      if (res.ok) {
+        last = { teacher: tSel.value, subject: sSel.value };
+        paint();
+        showToast("Saved", "success");
+      } else {
+        tSel.value = last.teacher; sSel.value = last.subject; paint();
+        showToast(res.d.message || "Could not save", "danger");
+      }
+    })
+    .catch(function () {
+      tSel.value = last.teacher; sSel.value = last.subject; paint();
+      showToast("Network error", "danger");
+    });
+  }
+  tSel.addEventListener("change", save);
+  sSel.addEventListener("change", save);
+});
+
+(function () {
+  var tbody = document.getElementById("classRows");
+  if (!tbody) return;
+  var dragEl = null;
+
+  tbody.addEventListener("dragstart", function (e) {
+    var tr = e.target.closest("tr.drag-row");
+    if (!tr) return;
+    dragEl = tr;
+    tr.classList.add("dragging");
+    e.dataTransfer.effectAllowed = "move";
+  });
+
+  tbody.addEventListener("dragend", function () {
+    if (dragEl) dragEl.classList.remove("dragging");
+    dragEl = null;
+    saveOrder();
+  });
+
+  tbody.addEventListener("dragover", function (e) {
+    e.preventDefault();
+    var afterEl = getRowAfter(tbody, e.clientY);
+    if (!dragEl) return;
+    if (afterEl == null) tbody.appendChild(dragEl);
+    else tbody.insertBefore(dragEl, afterEl);
+  });
+
+  function getRowAfter(container, y) {
+    var rows = [].slice.call(container.querySelectorAll("tr.drag-row:not(.dragging)"));
+    return rows.reduce(function (closest, row) {
+      var box = row.getBoundingClientRect();
+      var offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) return { offset: offset, element: row };
+      return closest;
+    }, { offset: -Infinity, element: null }).element;
+  }
+
+  function saveOrder() {
+    var ids = [].slice.call(tbody.querySelectorAll("tr.drag-row")).map(function (tr) { return tr.dataset.classId; });
+    fetch("{% url 'reorder_items' 'class' %}", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken() },
+      body: JSON.stringify({ order: ids })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { showToast(d.ok ? "Order saved" : "Could not save order", d.ok ? "success" : "danger"); })
+      .catch(function () { showToast("Network error", "danger"); });
+  }
+})();
+</script>
+{% endblock %}

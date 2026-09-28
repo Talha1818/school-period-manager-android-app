@@ -1,0 +1,246 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Period Manager{% endblock %} | Period Manager</title>
+  <link href="{% static 'vendor/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}" rel="stylesheet">
+  <link href="{% static 'css/style.css' %}" rel="stylesheet">
+</head>
+<body>
+{% csrf_token %}
+
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <span class="brand-icon"><i class="bi bi-grid-3x3-gap-fill"></i></span>
+    <div>
+      <div class="brand-title">Period Manager</div>
+      <div class="brand-sub">School Timetable</div>
+    </div>
+  </div>
+
+  <nav class="nav flex-column">
+    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+      <i class="bi bi-speedometer2"></i> Dashboard
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'class_wise' %}active{% endif %}" href="{% url 'class_wise' %}">
+      <i class="bi bi-mortarboard"></i> Class Wise
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'teacher_wise' %}active{% endif %}" href="{% url 'teacher_wise' %}">
+      <i class="bi bi-person-workspace"></i> Teacher Wise
+    </a>
+  </nav>
+
+  <div class="side-label">Quick Add</div>
+  <div class="d-grid gap-2 px-3">
+    <button class="btn btn-side" data-bs-toggle="modal" data-bs-target="#teacherModal"><i class="bi bi-person-plus"></i> Add Teacher</button>
+    <button class="btn btn-side" data-bs-toggle="modal" data-bs-target="#classModal"><i class="bi bi-building-add"></i> Add Class</button>
+    <button class="btn btn-side" data-bs-toggle="modal" data-bs-target="#periodModal"><i class="bi bi-clock-history"></i> Add Period</button>
+    <button class="btn btn-side" data-bs-toggle="modal" data-bs-target="#subjectModal"><i class="bi bi-journal-plus"></i> Add Subject</button>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <button class="btn btn-light d-lg-none" id="menuBtn"><i class="bi bi-list"></i></button>
+    <h1 class="page-title">{% block heading %}{% endblock %}</h1>
+    <div class="ms-auto d-flex align-items-center gap-3">
+      <span class="today-date"><i class="bi bi-calendar3"></i> {% now "j F, Y" %}</span>
+      {% block actions %}{% endblock %}
+    </div>
+  </header>
+
+  <main class="content">
+    {% for m in messages %}
+      <div class="alert alert-{% if m.tags == 'error' %}danger{% else %}success{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+        {{ m }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+
+<!-- Toast for AJAX feedback -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+  <div id="appToast" class="toast align-items-center border-0" role="alert">
+    <div class="d-flex">
+      <div class="toast-body" id="appToastBody"></div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODALS ============ -->
+<div class="modal fade" id="teacherModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="post" action="{% url 'add_item' 'teacher' %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.path }}">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Add Teacher</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Name</label>
+          <input type="text" name="name" class="form-control" placeholder="e.g. Muhammad Talha" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Designation</label>
+          <input type="text" name="designation" class="form-control" placeholder="e.g. Senior Teacher">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Contact No</label>
+          <input type="text" name="contact_no" class="form-control" placeholder="e.g. 0300-1234567">
+        </div>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" name="is_active" id="teacherActive" checked>
+          <label class="form-check-label" for="teacherActive">Active</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Teacher</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal fade" id="classModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="post" action="{% url 'add_item' 'class' %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.path }}">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-building-add me-2"></i>Add Class</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">Class Name</label>
+        <input type="text" name="name" class="form-control" placeholder="e.g. 10th" required>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Class</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal fade" id="periodModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="post" action="{% url 'add_item' 'period' %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.path }}">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-clock-history me-2"></i>Add Period</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">Period Name</label>
+        <input type="text" name="name" class="form-control" placeholder="e.g. P1" required>
+        <div class="form-text">Periods are shown in the order you add them.</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Period</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal fade" id="subjectModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="post" action="{% url 'add_item' 'subject' %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.path }}">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-journal-plus me-2"></i>Add Subject</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">Subject Name</label>
+        <input type="text" name="name" class="form-control" placeholder="e.g. Mathematics" required>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Subject</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Teacher -->
+<div class="modal fade" id="editTeacherModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="post" id="editTeacherForm">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.path }}">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Edit Teacher</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3"><label class="form-label">Name</label><input type="text" name="name" id="etName" class="form-control" required></div>
+        <div class="mb-3"><label class="form-label">Designation</label><input type="text" name="designation" id="etDesig" class="form-control"></div>
+        <div class="mb-3"><label class="form-label">Contact No</label><input type="text" name="contact_no" id="etContact" class="form-control"></div>
+        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" name="is_active" id="etActive"><label class="form-check-label" for="etActive">Active</label></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Update Teacher</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Class / Period / Subject (shared) -->
+<div class="modal fade" id="editSimpleModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="post" id="editSimpleForm">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.path }}">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Edit <span id="esKind"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">Name</label>
+        <input type="text" name="name" id="esName" class="form-control" required>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Update</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete confirmation (shared) -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <form class="modal-content" method="post" id="deleteForm">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.path }}">
+      <div class="modal-body text-center p-4">
+        <div class="del-icon"><i class="bi bi-trash3"></i></div>
+        <h6 class="mt-3">Delete <span id="deleteName" class="fw-bold"></span>?</h6>
+        <p class="text-muted small mb-0">Its timetable entries will also be removed.</p>
+      </div>
+      <div class="modal-footer justify-content-center border-0 pt-0">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-danger">Delete</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="{% static 'vendor/bootstrap.bundle.min.js' %}"></script>
+{% load static %}
+<script src="{% static 'js/app.js' %}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

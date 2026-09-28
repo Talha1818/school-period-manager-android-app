@@ -1,0 +1,43 @@
+plugins {
+    id "com.android.application"
+    id "com.chaquo.python"
+}
+
+android {
+    namespace "com.ghsjalhan.periodmanager"
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.ghsjalhan.periodmanager"
+        minSdk 29
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+        ndk {
+            abiFilters "arm64-v8a", "armeabi-v7a", "x86_64"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+chaquopy {
+    defaultConfig {
+        version "3.11"
+        buildPython "python3"
+        pip {
+            install "Django>=4.2,<5.2"
+            install "reportlab>=4.0"
+            install "whitenoise>=6.6"
+            install "waitress>=3.0"
+        }
+    }
+}
