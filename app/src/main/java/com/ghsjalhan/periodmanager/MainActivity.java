@@ -30,7 +30,6 @@ public class MainActivity extends Activity {
 
     private static final int PORT = 8000;
     private static final String BASE_URL = "http://127.0.0.1:" + PORT + "/";
-    private static final int VERSION = 1; // bump when the bundled project changes
 
     private WebView webView;
 
@@ -78,12 +77,18 @@ public class MainActivity extends Activity {
             File dataDir = new File(getFilesDir(), "data");
             SharedPreferences prefs = getSharedPreferences("pm", MODE_PRIVATE);
 
-            // (Re)extract the bundled Django project on first run / app update.
+            // (Re)extract the bundled Django project on first run and on every app update.
             // The database lives in data/, so it is never touched here.
-            if (!projectDir.exists() || prefs.getInt("extracted_version", 0) != VERSION) {
+            long versionCode;
+            try {
+                versionCode = getPackageManager().getPackageInfo(getPackageName(), 0).getLongVersionCode();
+            } catch (Exception e) {
+                versionCode = 1;
+            }
+            if (!projectDir.exists() || prefs.getLong("extracted_code", 0) != versionCode) {
                 deleteRecursive(projectDir);
                 copyAsset(getAssets(), "project", projectDir);
-                prefs.edit().putInt("extracted_version", VERSION).apply();
+                prefs.edit().putLong("extracted_code", versionCode).apply();
             }
 
             if (!Python.isStarted()) {
