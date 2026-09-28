@@ -29,8 +29,12 @@ jobs:
           gradle-version: 8.7
       - name: Build debug APK
         run: |
-          set -o pipefail
-          gradle assembleDebug --no-daemon --console=plain --stacktrace 2>&1 | tail -n 120
+          gradle assembleDebug --no-daemon --console=plain > build.log 2>&1 || FAILED=1
+          echo "=========== ERROR SUMMARY ==========="
+          grep -n -A 25 "What went wrong" build.log || true
+          echo "=========== LAST 40 LINES ==========="
+          tail -n 40 build.log
+          if [ "$FAILED" = "1" ]; then exit 1; fi
       - uses: actions/upload-artifact@v4
         with:
           name: PeriodManager-apk
