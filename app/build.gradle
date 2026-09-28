@@ -38,6 +38,7 @@ chaquopy {
             install "reportlab>=4.0"
             install "whitenoise>=6.6"
             install "waitress>=3.0"
+            install "tzdata"
         }
     }
 }
