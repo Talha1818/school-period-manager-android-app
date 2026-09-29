@@ -74,7 +74,7 @@ body { background: var(--bg); color: var(--text); }
 .grid-wrap { max-height: calc(100vh - 210px); }
 .grid-table { min-width: 900px; }
 .grid-table thead th { text-align: center; position: sticky; top: 0; z-index: 3; }
-.grid-table th.sticky-col, .grid-table td.sticky-col { position: sticky; left: 0; background: #fff; z-index: 2; box-shadow: 1px 0 0 var(--border); text-align: left; min-width: 150px; }
+.grid-table th.sticky-col, .grid-table td.sticky-col { position: sticky; left: 0; background: #fff; z-index: 2; border-right: 2px solid var(--primary); text-align: left; min-width: 150px; }
 .grid-table thead th.sticky-col { z-index: 4; background: #f8fafc; }
 .class-name { font-weight: 700; }
 .class-name .sub { font-weight: 400; color: var(--muted); font-size: .78rem; }

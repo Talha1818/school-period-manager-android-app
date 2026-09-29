@@ -2,6 +2,10 @@
 {% block title %}Class Wise{% endblock %}
 {% block heading %}Class Wise Distribution{% endblock %}
 
+{% block actions %}
+<a class="btn btn-danger" href="{% url 'class_wise_pdf' %}"><i class="bi bi-file-earmark-pdf"></i> Save PDF</a>
+{% endblock %}
+
 {% block content %}
 {% if not rows or not periods %}
   <div class="card-box p-5 text-center">

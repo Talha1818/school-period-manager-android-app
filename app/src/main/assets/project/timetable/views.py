@@ -202,6 +202,70 @@ def save_allocation(request):
     return JsonResponse({"ok": True, "message": "Saved"})
 
 
+def class_wise_pdf(request):
+    """Download the Class Wise table as a landscape A4 PDF."""
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4, landscape
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+    from reportlab.lib.units import mm
+    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
+    periods = list(Period.objects.all())
+    allocs = Allocation.objects.select_related("teacher", "subject").all()
+    lookup = {(a.school_class_id, a.period_id): a for a in allocs}
+
+    cell = ParagraphStyle("cell", fontName="Helvetica", fontSize=7.5, leading=9, alignment=1)
+    head = ParagraphStyle("head", fontName="Helvetica-Bold", fontSize=8, leading=10, alignment=1, textColor=colors.white)
+    name_st = ParagraphStyle("name", fontName="Helvetica-Bold", fontSize=8, leading=10)
+
+    data = [[Paragraph("Class Name", head)] + [Paragraph(p.name, head) for p in periods]]
+    for c in SchoolClass.objects.all():
+        row = [Paragraph(f"<b>{c.name}</b>", name_st)]
+        for p in periods:
+            a = lookup.get((c.id, p.id))
+            if a and a.teacher:
+                sub = a.subject.name if a.subject else "-"
+                row.append(Paragraph(f"<b>{a.teacher.name}</b><br/>{sub}", cell))
+            else:
+                row.append(Paragraph("-", cell))
+        data.append(row)
+
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=landscape(A4), leftMargin=10 * mm, rightMargin=10 * mm,
+                            topMargin=12 * mm, bottomMargin=10 * mm, title="Class Wise Distribution")
+    usable = landscape(A4)[0] - 20 * mm
+    name_w = 38 * mm
+    period_w = (usable - name_w) / max(len(periods), 1)
+
+    table = Table(data, colWidths=[name_w] + [period_w] * len(periods), repeatRows=1)
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#4f46e5")),
+        ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#cbd5e1")),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f5f7ff")]),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ("LINEAFTER", (0, 0), (0, -1), 1.2, colors.HexColor("#4f46e5")),
+    ]))
+
+    styles = getSampleStyleSheet()
+    title = ParagraphStyle("title", parent=styles["Title"], fontSize=15, alignment=0, spaceAfter=2)
+    subtitle = ParagraphStyle("subtitle", parent=styles["Normal"], fontSize=10, textColor=colors.HexColor("#4f46e5"),
+                              fontName="Helvetica-Bold", spaceAfter=2)
+    sub = ParagraphStyle("sub", parent=styles["Normal"], fontSize=8.5, textColor=colors.HexColor("#64748b"))
+    doc.build([
+        Paragraph("BEST TIME TABLE FOR GHS PHILLOKI", title),
+        Paragraph("DESIGNED BY TARIQ JAVEED SST", subtitle),
+        Paragraph(f"Class Wise Period Distribution &nbsp;&bull;&nbsp; Generated on {date.today():%d %B, %Y}", sub),
+        Spacer(1, 6 * mm),
+        table,
+    ])
+
+    response = HttpResponse(buf.getvalue(), content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="class_wise_{date.today():%Y-%m-%d}.pdf"'
+    return response
+
+
 def teacher_wise_pdf(request):
     """Download the Teacher Wise table as a landscape A4 PDF."""
     from reportlab.lib import colors
@@ -249,6 +313,7 @@ def teacher_wise_pdf(request):
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f5f7ff")]),
         ("TOPPADDING", (0, 0), (-1, -1), 4),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ("LINEAFTER", (0, 0), (0, -1), 1.2, colors.HexColor("#4f46e5")),
     ]))
 
     styles = getSampleStyleSheet()

@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path("", views.dashboard, name="dashboard"),
     path("class-wise/", views.class_wise, name="class_wise"),
+    path("class-wise/pdf/", views.class_wise_pdf, name="class_wise_pdf"),
     path("teacher-wise/", views.teacher_wise, name="teacher_wise"),
     path("teacher-wise/pdf/", views.teacher_wise_pdf, name="teacher_wise_pdf"),
     path("add/<str:kind>/", views.add_item, name="add_item"),
