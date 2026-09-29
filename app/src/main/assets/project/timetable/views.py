@@ -322,7 +322,7 @@ def teacher_wise_pdf(request):
                               fontName="Helvetica-Bold", spaceAfter=2)
     sub = ParagraphStyle("sub", parent=styles["Normal"], fontSize=8.5, textColor=colors.HexColor("#64748b"))
     doc.build([
-        Paragraph("BEST TIME TABLE GHS JALHAN", title),
+        Paragraph("BEST TIME TABLE GHS PHILLOKI", title),
         Paragraph("DESIGNED BY TARIQ JAVEED SST", subtitle),
         Paragraph(f"Teacher Wise Period Distribution &nbsp;&bull;&nbsp; Generated on {date.today():%d %B, %Y}", sub),
         Spacer(1, 6 * mm),
